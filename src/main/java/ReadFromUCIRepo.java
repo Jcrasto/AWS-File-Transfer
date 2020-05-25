@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ReadFromUCIRepo {
+    String colNames = null;
 
-    public static void main(String[] args) throws Exception {
+    public void createFiles(String[] args) throws Exception {
         URL link = null;
         try{
             link =  new URL(args[0]);
@@ -26,6 +27,10 @@ public class ReadFromUCIRepo {
         stringPath = stringPath.replace("<file>", setName);
         Path path = Paths.get(stringPath);
         FileWriter myWriter = new FileWriter(stringPath);
+        if (this.colNames != null){
+            myWriter.write(colNames);
+            myWriter.write("\n");
+        }
         String line;
         while ((line = reader.readLine()) != null)
         {
@@ -33,14 +38,21 @@ public class ReadFromUCIRepo {
                 myWriter.write(line);
                 myWriter.write("\n");
             } catch (IOException e) {
-                System.out.println("An error occurred.");
                 e.printStackTrace();
             }
         }
         reader.close();
         myWriter.close();
 
+        AwsUploader uploader = new AwsUploader();
+        uploader.uploadFile(setName,stringPath);
+
         Files.deleteIfExists(path);
+        this.colNames = null;
+    }
+
+    public void setColnames(String names){
+        colNames = names;
     }
 
 }
