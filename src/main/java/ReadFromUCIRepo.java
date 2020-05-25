@@ -1,11 +1,9 @@
 import java.net.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 public class ReadFromUCIRepo {
 
@@ -17,21 +15,33 @@ public class ReadFromUCIRepo {
             throw new IllegalArgumentException("Pass in URL from https://archive.ics.uci.edu/ml/index.php");
         }
         String[] pathList = link.getPath().split("/", 10);
-        System.out.println(Arrays.asList(pathList));
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(link.openStream()));
-        String pageHtml = new String();
-        String inputLine;
-        while ((inputLine = in.readLine()) != null)
-            pageHtml = pageHtml.concat(inputLine);
-        in.close();
-        Document html = Jsoup.parse(pageHtml);
-        String title = html.title();
-        String href = html.body().getElementsByTag("li").text();
-        String[] arrOfStr = href.split(" ", 10);
-        for (String temp : arrOfStr) {
-            System.out.println(temp);
+        String setName = pathList[pathList.length - 1];
+        setName = setName.replace(".data","");
+
+        HttpURLConnection con = (HttpURLConnection) link.openConnection();
+        con.setRequestMethod("GET");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(link.openStream()));
+        String stringPath = "./src/main/resources/<file>.csv";
+        stringPath = stringPath.replace("<file>", setName);
+        Path path = Paths.get(stringPath);
+        FileWriter myWriter = new FileWriter(stringPath);
+        String line;
+        while ((line = reader.readLine()) != null)
+        {
+            try {
+                myWriter.write(line);
+                myWriter.write("\n");
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
         }
+        reader.close();
+        myWriter.close();
+
+        Files.deleteIfExists(path);
     }
+
 }
 
